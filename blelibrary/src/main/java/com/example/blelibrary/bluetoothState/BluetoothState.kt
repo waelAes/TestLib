@@ -1,25 +1,35 @@
 package com.example.blelibrary.bluetoothState
 
 
-import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
+import android.Manifest
 import android.content.Context
-import android.widget.Toast
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.app.ActivityCompat
 
 
-class BluetoothState: BluetoothStateInterface {
-    override fun showToast(context: Context, message: String) {
-        Toast.makeText(context,"Toast shown from Library",Toast.LENGTH_SHORT).show()
-    }
+class BluetoothState(private val context: Context, bluetoothManagerInterface: BluetoothManagerInterface): BluetoothStateInterface {
 
-    @SuppressLint("MissingPermission")
-    override fun enableBluetooth(context: Context) {
-        if (BluetoothAdapter.getDefaultAdapter() != null && !BluetoothAdapter.getDefaultAdapter().isEnabled) {
-            BluetoothAdapter.getDefaultAdapter().enable()
+    private val adapter = bluetoothManagerInterface.getBluetoothManager().adapter
+
+
+    override fun enableBluetooth() {
+        if (adapter != null && adapter.isEnabled) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (ActivityCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    return
+                }
+            }
+            adapter.enable()
         }
     }
 
     override fun isBluetoothEnabled(): Boolean {
-        return BluetoothAdapter.getDefaultAdapter() != null && BluetoothAdapter.getDefaultAdapter().isEnabled
+        return adapter != null && adapter.isEnabled
     }
+
 }
